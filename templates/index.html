@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Gift Card Assistant</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { 
+            font-family: Arial, sans-serif; 
+            max-width: 1000px; 
+            margin: 0 auto; 
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            display: flex;
+            gap: 20px;
+        }
+        .auth-section {
+            flex: 1;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .chat-section {
+            flex: 2;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h2 { margin-top: 0; color: #333; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; color: #666; }
+        input { 
+            width: 100%; 
+            padding: 8px; 
+            border: 1px solid #ddd; 
+            border-radius: 4px;
+        }
+        button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 5px;
+        }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-secondary { background: #6c757d; color: white; }
+        .message {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        #chat-messages {
+            height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 10px;
+            background: #f9f9f9;
+        }
+        .user-message { text-align: right; color: #007bff; margin: 5px; }
+        .bot-message { text-align: left; color: #28a745; margin: 5px; }
+        .tab { margin-bottom: 20px; }
+        .tab button {
+            background: #f1f1f1;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+        }
+        .tab button.active { background: #007bff; color: white; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+    </style>
+</head>
+<body>
+    <h1>🎁 Gift Card Assistant</h1>
+    
+    <div class="container">
+        <!-- Authentication Section -->
+        <div class="auth-section">
+            <div class="tab">
+                <button id="login-tab" class="active" onclick="switchTab('login')">Login</button>
+                <button id="signup-tab" onclick="switchTab('signup')">Sign Up</button>
+                <button id="verify-tab" onclick="switchTab('verify')">Quick Verify</button>
+            </div>
+            
+            <!-- Login Form -->
+            <div id="login-form" class="tab-content active">
+                <h2>Login</h2>
+                <div class="form-group">
+                    <label>Username:</label>
+                    <input type="text" id="login-username" placeholder="Enter username">
+                </div>
+                <div class="form-group">
+                    <label>Password:</label>
+                    <input type="password" id="login-password" placeholder="Enter password">
+                </div>
+                <button class="btn-primary" onclick="login()">Login</button>
+                <div id="login-message" class="message" style="display: none;"></div>
+            </div>
+            
+            <!-- Signup Form -->
+            <div id="signup-form" class="tab-content">
+                <h2>Sign Up</h2>
+                <div class="form-group">
+                    <label>Username:</label>
+                    <input type="text" id="signup-username" placeholder="Choose username">
+                </div>
+                <div class="form-group">
+                    <label>Password:</label>
+                    <input type="password" id="signup-password" placeholder="Choose password">
+                </div>
+                <div class="form-group">
+                    <label>Gift Card Code:</label>
+                    <input type="text" id="signup-code" placeholder="6-character code" maxlength="6" style="text-transform:uppercase">
+                </div>
+                <button class="btn-success" onclick="signup()">Sign Up</button>
+                <div id="signup-message" class="message" style="display: none;"></div>
+            </div>
+            
+            <!-- Quick Verify Form -->
+            <div id="verify-form" class="tab-content">
+                <h2>Quick Gift Card Verify</h2>
+                <p class="info">Verify with just your gift card code</p>
+                <div class="form-group">
+                    <label>Gift Card Code:</label>
+                    <input type="text" id="verify-code" placeholder="6-character code" maxlength="6" style="text-transform:uppercase">
+                </div>
+                <button class="btn-secondary" onclick="verifyGiftCard()">Verify</button>
+                <div id="verify-message" class="message" style="display: none;"></div>
+            </div>
+            
+            <!-- User Info (shown when logged in) -->
+            <div id="user-info" style="display: none;">
+                <h3>Welcome, <span id="display-username"></span>!</h3>
+                
+                <!-- FORCE LOGOUT BUTTON - Shows login screen immediately -->
+                <div style="margin: 15px 0;">
+                    <button onclick="forceLogout()" style="background: #ffc107; color: black; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; width: 100%; font-weight: bold; margin-bottom: 10px;">
+                        🔄 Switch Account / Show Login
+                    </button>
+                </div>
+                
+                <!-- Regular Logout Button -->
+                <button class="btn-danger" onclick="logout()" style="width: 100%;">Regular Logout</button>
+            </div>
+        </div>
+        
+        <!-- Chat Section -->
+        <div class="chat-section">
+            <h2>Chat Assistant <span id="chat-status" style="font-size: 14px; color: #666;"></span></h2>
+            <div id="chat-messages"></div>
+            <div style="display: flex; gap: 10px;">
+                <input type="text" id="chat-input" placeholder="Type your message..." style="flex: 1;">
+                <button class="btn-primary" onclick="sendMessage()">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = null;
+        let tempVerified = false;
+        
+        // Check session on load
+        checkSession();
+        
+        function switchTab(tab) {
+            // Update tab buttons
+            document.getElementById('login-tab').classList.remove('active');
+            document.getElementById('signup-tab').classList.remove('active');
+            document.getElementById('verify-tab').classList.remove('active');
+            
+            // Hide all forms
+            document.getElementById('login-form').classList.remove('active');
+            document.getElementById('signup-form').classList.remove('active');
+            document.getElementById('verify-form').classList.remove('active');
+            
+            // Show selected tab
+            if (tab === 'login') {
+                document.getElementById('login-tab').classList.add('active');
+                document.getElementById('login-form').classList.add('active');
+            } else if (tab === 'signup') {
+                document.getElementById('signup-tab').classList.add('active');
+                document.getElementById('signup-form').classList.add('active');
+            } else if (tab === 'verify') {
+                document.getElementById('verify-tab').classList.add('active');
+                document.getElementById('verify-form').classList.add('active');
+            }
+        }
+        
+        async function checkSession() {
+            const response = await fetch('/api/session');
+            const data = await response.json();
+            
+            if (data.authenticated) {
+                currentUser = data.username;
+                document.querySelector('.auth-section').style.display = 'none';
+                document.getElementById('user-info').style.display = 'block';
+                document.getElementById('display-username').textContent = currentUser;
+                document.getElementById('chat-status').textContent = '✓ Verified';
+                addMessage('bot', 'Welcome back! How can I help you with your gift card today?');
+            }
+        }
+        
+        async function signup() {
+            const username = document.getElementById('signup-username').value;
+            const password = document.getElementById('signup-password').value;
+            const code = document.getElementById('signup-code').value;
+            
+            const response = await fetch('/api/signup', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({username, password, gift_card_code: code})
+            });
+            
+            const data = await response.json();
+            showMessage('signup-message', data.message, data.success ? 'success' : 'error');
+            
+            if (data.success) {
+                setTimeout(() => switchTab('login'), 2000);
+            }
+        }
+        
+        async function login() {
+            const username = document.getElementById('login-username').value;
+            const password = document.getElementById('login-password').value;
+            
+            const response = await fetch('/api/login', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({username, password})
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                currentUser = username;
+                document.querySelector('.auth-section').style.display = 'none';
+                document.getElementById('user-info').style.display = 'block';
+                document.getElementById('display-username').textContent = username;
+                document.getElementById('chat-status').textContent = '✓ Verified';
+                addMessage('bot', 'Login successful! How can I help you?');
+            } else {
+                showMessage('login-message', data.message, 'error');
+            }
+        }
+        
+        async function verifyGiftCard() {
+            const code = document.getElementById('verify-code').value;
+            
+            const response = await fetch('/api/verify-gift-card', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({code})
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                tempVerified = true;
+                document.querySelector('.auth-section').style.display = 'none';
+                document.getElementById('user-info').style.display = 'none';
+                document.getElementById('chat-status').textContent = '✓ Temporarily Verified';
+                addMessage('bot', 'Gift card verified! You can ask questions about gift cards. Note: Some features require full login.');
+            } else {
+                showMessage('verify-message', data.message, 'error');
+            }
+        }
+        
+        async function logout() {
+            await fetch('/api/logout', {method: 'POST'});
+            currentUser = null;
+            tempVerified = false;
+            document.querySelector('.auth-section').style.display = 'block';
+            document.getElementById('user-info').style.display = 'none';
+            document.getElementById('chat-status').textContent = '';
+            document.getElementById('chat-messages').innerHTML = '';
+            switchTab('login');
+        }
+        
+        // NEW FORCE LOGOUT FUNCTION - Completely resets everything
+        async function forceLogout() {
+            await fetch('/api/logout', {method: 'POST'});
+            currentUser = null;
+            tempVerified = false;
+            document.querySelector('.auth-section').style.display = 'block';
+            document.getElementById('user-info').style.display = 'none';
+            document.getElementById('chat-status').textContent = '';
+            document.getElementById('chat-messages').innerHTML = '';
+            switchTab('login');
+            
+            // Clear any browser storage
+            localStorage.clear();
+            sessionStorage.clear();
+            
+            console.log('Force logout complete - login screen should appear');
+        }
+        
+        async function sendMessage() {
+            const message = document.getElementById('chat-input').value;
+            if (!message) return;
+            
+            addMessage('user', message);
+            document.getElementById('chat-input').value = '';
+            
+            // Choose endpoint based on auth type
+            const endpoint = currentUser ? '/api/chat' : '/api/chat/temp';
+            
+            const response = await fetch(endpoint, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({message})
+            });
+            
+            if (response.status === 401) {
+                addMessage('bot', 'Please login or verify a gift card code first.');
+                return;
+            }
+            
+            const data = await response.json();
+            addMessage('bot', data.response || data.error);
+        }
+        
+        function addMessage(sender, text) {
+            const container = document.getElementById('chat-messages');
+            const msgDiv = document.createElement('div');
+            msgDiv.className = sender === 'user' ? 'user-message' : 'bot-message';
+            msgDiv.innerHTML = `<strong>${sender === 'user' ? 'You' : 'Bot'}:</strong> ${text}`;
+            container.appendChild(msgDiv);
+            container.scrollTop = container.scrollHeight;
+        }
+        
+        function showMessage(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            element.style.display = 'block';
+            element.className = `message ${type}`;
+            element.textContent = message;
+            
+            setTimeout(() => {
+                element.style.display = 'none';
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

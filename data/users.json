@@ -1,0 +1,19 @@
+{
+  "users": [
+    {
+      "username": "l",
+      "password_hash": "d5b383aaf64d05ec1e179f2f2396b3901c6c9e3c28460212a0f62cd71ea2291d",
+      "salt": "ea33fd87326f536e3569640e245d4589",
+      "gift_card_code": "PROMO5",
+      "created_at": null
+    },
+    
+    {
+      "username": "r",
+      "password_hash": "3bf73ea40ddb67b7e739933b269a490c0c7ba7f52347a4fe46ff4798bf0ecd54",
+      "salt": "59f692b873b371c4ca2fe72b80d6ce8e",
+      "gift_card_code": "GIFT24",
+      "created_at": null
+    }
+  ]
+}
